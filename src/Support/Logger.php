@@ -35,5 +35,6 @@ class Logger
             $context === [] ? '' : json_encode($context, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
         );
         file_put_contents($this->logFile, $line, FILE_APPEND);
+        error_log(trim($line));
     }
 }
