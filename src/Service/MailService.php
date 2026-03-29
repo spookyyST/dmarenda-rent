@@ -25,6 +25,8 @@ class MailService
             $mail->SMTPAuth = true;
             $mail->Username = (string) app_config($this->config, 'smtp.user');
             $mail->Password = (string) app_config($this->config, 'smtp.pass');
+            $mail->CharSet = 'UTF-8';
+            $mail->Encoding = PHPMailer::ENCODING_BASE64;
 
             $encryption = (string) app_config($this->config, 'smtp.encryption', 'tls');
             if ($encryption === 'ssl') {
@@ -41,6 +43,7 @@ class MailService
             $mail->Subject = $subject;
             $mail->isHTML(true);
             $mail->Body = $html;
+            $mail->AltBody = trim(strip_tags(str_replace(['<br>', '<br/>', '<br />'], PHP_EOL, $html)));
 
             foreach ($attachments as $attachment) {
                 if (!is_string($attachment) || $attachment === '') {
