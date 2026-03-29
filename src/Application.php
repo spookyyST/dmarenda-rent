@@ -124,7 +124,8 @@ class Application
             $this->paymentRepository,
             $this->tenantRepository,
             $this->fileStorage,
-            $this->contentService
+            $this->contentService,
+            $this->notificationService
         );
 
         $tenantController = new TenantController(
@@ -221,7 +222,9 @@ class Application
             $this->invitationRepository,
             $this->contractRepository,
             $this->fileStorage,
-            $this->notificationService
+            $this->notificationService,
+            $this->pdfService,
+            $this->contentService
         );
 
         $this->paymentWorkflowService = new PaymentWorkflowService(

@@ -12,6 +12,7 @@
     </div>
 
     <h1>Вход администратора</h1>
+    <p class="muted">Управление приглашениями, договорами и платежами арендаторов.</p>
     <form method="post" action="<?= htmlspecialchars(rtrim($base_path, '/') . '/admin/login', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" class="form-grid">
         <input type="hidden" name="_csrf" value="<?= htmlspecialchars((string) $csrf_token, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>">
 

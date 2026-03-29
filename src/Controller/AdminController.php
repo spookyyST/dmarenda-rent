@@ -15,6 +15,7 @@ use Rent\Repository\TenantRepository;
 use Rent\Repository\UserRepository;
 use Rent\Service\ContentService;
 use Rent\Service\FileStorageService;
+use Rent\Service\NotificationService;
 use Rent\Support\Auth;
 use Rent\Support\Csrf;
 use Rent\Support\Validator;
@@ -34,7 +35,8 @@ class AdminController extends BaseController
         private readonly PaymentRepository $paymentRepository,
         private readonly TenantRepository $tenantRepository,
         private readonly FileStorageService $fileStorage,
-        private readonly ContentService $contentService
+        private readonly ContentService $contentService,
+        private readonly NotificationService $notificationService
     ) {
         parent::__construct($config, $view, $session, $csrf);
     }
@@ -115,7 +117,7 @@ class AdminController extends BaseController
 
         $token = bin2hex(random_bytes(24));
 
-        $this->invitationRepository->create([
+        $invitationId = $this->invitationRepository->create([
             'landlord_id' => $landlordId,
             'email' => $email,
             'phone' => $phone !== '' ? $phone : null,
@@ -126,6 +128,11 @@ class AdminController extends BaseController
             'status' => 'new',
             'created_at' => app_now((string) app_config($this->config, 'app.timezone'))->format('Y-m-d H:i:s'),
         ]);
+
+        $invitation = $this->invitationRepository->findById($invitationId);
+        if ($invitation !== null) {
+            $this->notificationService->sendInvitationEmail($invitation);
+        }
 
         $this->session?->flash(
             'success',

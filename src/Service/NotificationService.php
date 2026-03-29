@@ -17,7 +17,38 @@ class NotificationService
     ) {
     }
 
-    public function sendRegistrationEmail(array $tenant, array $invitation): void
+    public function sendInvitationEmail(array $invitation): void
+    {
+        $subject = 'Приглашение в ДМаренда';
+        $registerLink = rtrim((string) app_config($this->config, 'app.base_url'), '/') . '/i/' . $invitation['token'];
+        $html = $this->view->render('emails/invitation.php', [
+            'invitation' => $invitation,
+            'register_link' => $registerLink,
+            'app' => $this->config['app'],
+        ]);
+
+        $recipient = (string) ($invitation['email'] ?? '');
+        if ($recipient === '') {
+            return;
+        }
+
+        $ok = $this->mailService->send($recipient, $subject, $html);
+
+        $this->notificationRepository->create([
+            'contract_id' => null,
+            'tenant_id' => null,
+            'type' => 'invitation',
+            'channel' => 'email',
+            'recipient' => $recipient,
+            'payload_json' => json_encode(['invitation_id' => (int) $invitation['id']], JSON_UNESCAPED_UNICODE),
+            'status' => $ok ? 'sent' : 'failed',
+            'scheduled_for' => null,
+            'sent_at' => $ok ? app_now((string) app_config($this->config, 'app.timezone'))->format('Y-m-d H:i:s') : null,
+            'created_at' => app_now((string) app_config($this->config, 'app.timezone'))->format('Y-m-d H:i:s'),
+        ]);
+    }
+
+    public function sendRegistrationEmail(array $tenant, array $invitation, ?string $contractPdf = null): void
     {
         $subject = 'Регистрация в ДМаренда завершена';
         $cabinetLink = rtrim((string) app_config($this->config, 'app.base_url'), '/') . '/i/' . $invitation['token'] . '/cabinet';
@@ -28,7 +59,12 @@ class NotificationService
             'app' => $this->config['app'],
         ]);
 
-        $ok = $this->mailService->send((string) $tenant['email'], $subject, $html);
+        $attachments = [];
+        if (is_string($contractPdf) && $contractPdf !== '') {
+            $attachments[] = $contractPdf;
+        }
+
+        $ok = $this->mailService->send((string) $tenant['email'], $subject, $html, $attachments);
 
         $this->notificationRepository->create([
             'contract_id' => null,
@@ -36,7 +72,10 @@ class NotificationService
             'type' => 'registration',
             'channel' => 'email',
             'recipient' => (string) $tenant['email'],
-            'payload_json' => json_encode(['invitation_id' => (int) $invitation['id']], JSON_UNESCAPED_UNICODE),
+            'payload_json' => json_encode([
+                'invitation_id' => (int) $invitation['id'],
+                'contract_pdf_attached' => is_string($contractPdf) && $contractPdf !== '',
+            ], JSON_UNESCAPED_UNICODE),
             'status' => $ok ? 'sent' : 'failed',
             'scheduled_for' => null,
             'sent_at' => $ok ? app_now((string) app_config($this->config, 'app.timezone'))->format('Y-m-d H:i:s') : null,
