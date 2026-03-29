@@ -9,3 +9,9 @@
 !/public/uploads/receipts/.gitkeep
 
 /config.php
+/storage/files/passports/*
+/storage/files/contracts/*
+/storage/files/receipts/*
+!/storage/files/passports/.gitkeep
+!/storage/files/contracts/.gitkeep
+!/storage/files/receipts/.gitkeep
