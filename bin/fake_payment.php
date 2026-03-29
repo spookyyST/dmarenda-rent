@@ -11,6 +11,7 @@ use Rent\Repository\TenantRepository;
 use Rent\Repository\UserRepository;
 use Rent\Service\FileStorageService;
 use Rent\Service\PdfService;
+use Rent\Service\ContentService;
 use Rent\Support\View;
 
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
@@ -48,6 +49,7 @@ $userRepository = new UserRepository($pdo);
 $tenantRepository = new TenantRepository($pdo);
 $paymentRepository = new PaymentRepository($pdo);
 $pdfService = new PdfService($config, new View(dirname(__DIR__) . '/templates'), new FileStorageService($config));
+$contentService = new ContentService($config);
 
 if ($token === '') {
     $rows = $invitationRepository->listAll();
@@ -82,7 +84,7 @@ $pdo->beginTransaction();
 try {
     $contractPdfPath = (string) ($contract['pdf_path'] ?? '');
     if ($contractPdfPath === '') {
-        $contractPdfPath = $pdfService->generateContractPdf(buildContractPayload($config, $invitation, $tenant, $tenantProfile));
+        $contractPdfPath = $pdfService->generateContractPdf(buildContractPayload($config, $contentService, $invitation, $tenant, $tenantProfile));
         $contractRepository->updatePdfPath((int) $contract['id'], $contractPdfPath);
     }
 
@@ -167,14 +169,15 @@ function monthNameRu(int $month): string
     return $months[$month] ?? '';
 }
 
-function buildContractPayload(array $config, array $invitation, array $tenant, array $tenantProfile): array
+function buildContractPayload(array $config, ContentService $contentService, array $invitation, array $tenant, array $tenantProfile): array
 {
     $timezone = (string) app_config($config, 'app.timezone', 'Europe/Moscow');
     $contractDate = app_now($timezone);
+    $landlord = app_config($config, 'landlord.details', []);
+    $rentAmount = number_format((float) $invitation['rent_amount'], 2, '.', ' ');
 
-    return [
-        'city' => app_config($config, 'app.city', 'Москва'),
-        'contract_date' => $contractDate->format('Y-m-d'),
+    $variables = [
+        'city' => (string) app_config($config, 'app.city', 'Москва'),
         'contract_date_day' => $contractDate->format('d'),
         'contract_date_month' => monthNameRu((int) $contractDate->format('n')),
         'contract_date_year' => $contractDate->format('Y'),
@@ -187,11 +190,40 @@ function buildContractPayload(array $config, array $invitation, array $tenant, a
         'tenant_phone' => (string) $tenant['phone'],
         'tenant_email' => (string) $tenant['email'],
         'property_address' => (string) $invitation['property_address'],
-        'rent_amount' => (float) $invitation['rent_amount'],
-        'landlord' => app_config($config, 'landlord.details', []),
+        'rent_amount' => $rentAmount,
+        'landlord_full_name' => (string) ($landlord['full_name'] ?? ''),
+        'landlord_type' => (string) ($landlord['type'] ?? ''),
+        'landlord_inn' => (string) ($landlord['inn'] ?? ''),
+        'landlord_passport_series' => (string) ($landlord['passport_series'] ?? ''),
+        'landlord_passport_number' => (string) ($landlord['passport_number'] ?? ''),
+        'landlord_passport_issued_by' => (string) ($landlord['passport_issued_by'] ?? ''),
+        'landlord_passport_date' => (string) ($landlord['passport_date'] ?? ''),
+        'landlord_registration_address' => (string) ($landlord['registration_address'] ?? ''),
+        'landlord_phone' => (string) ($landlord['phone'] ?? ''),
+        'landlord_email' => (string) ($landlord['email'] ?? ''),
+    ];
+
+    return [
+        'city' => $variables['city'],
+        'contract_date' => $contractDate->format('Y-m-d'),
+        'contract_date_day' => $variables['contract_date_day'],
+        'contract_date_month' => $variables['contract_date_month'],
+        'contract_date_year' => $variables['contract_date_year'],
+        'tenant_full_name' => $variables['tenant_full_name'],
+        'tenant_passport_series' => $variables['tenant_passport_series'],
+        'tenant_passport_number' => $variables['tenant_passport_number'],
+        'tenant_passport_issued_by' => $variables['tenant_passport_issued_by'],
+        'tenant_passport_date' => $variables['tenant_passport_date'],
+        'tenant_registration_address' => $variables['tenant_registration_address'],
+        'tenant_phone' => $variables['tenant_phone'],
+        'tenant_email' => $variables['tenant_email'],
+        'property_address' => $variables['property_address'],
+        'rent_amount' => $variables['rent_amount'],
+        'landlord' => $landlord,
         'tenant' => $tenant,
         'tenant_profile' => $tenantProfile,
         'invitation' => $invitation,
         'service_name' => app_config($config, 'app.name', 'ДМаренда'),
+        'contract_html' => $contentService->renderContractHtml($variables),
     ];
 }

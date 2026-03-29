@@ -12,6 +12,7 @@ use Rent\Repository\InvitationRepository;
 use Rent\Repository\PaymentRepository;
 use Rent\Repository\TenantRepository;
 use Rent\Repository\UserRepository;
+use Rent\Service\ContentService;
 use Rent\Service\FileStorageService;
 use Rent\Service\PaymentWorkflowService;
 use Rent\Service\TenantRegistrationService;
@@ -35,7 +36,8 @@ class TenantController extends BaseController
         private readonly FileStorageService $fileStorage,
         private readonly TenantRegistrationService $registrationService,
         private readonly PaymentWorkflowService $paymentWorkflowService,
-        private readonly PaymentRepository $paymentRepository
+        private readonly PaymentRepository $paymentRepository,
+        private readonly ContentService $contentService
     ) {
         parent::__construct($config, $view, $session, $csrf);
     }
@@ -160,14 +162,13 @@ class TenantController extends BaseController
             return $this->redirect('/i/' . $invitation['token']);
         }
 
+        $contractHtml = $this->contentService->renderContractHtml($this->buildContractVariables($invitation, $tenant, $tenantProfile));
+
         return $this->render('tenant/contract_preview.php', [
             'invitation' => $invitation,
             'contract' => $contract,
-            'tenant' => $tenant,
-            'tenant_profile' => $tenantProfile,
-            'city' => app_config($this->config, 'app.city', 'Москва'),
+            'contract_html' => $contractHtml,
             'privacy_url' => $this->assetUrl((string) app_config($this->config, 'app.privacy_path', '/privacy')),
-            'landlord' => app_config($this->config, 'landlord.details', []),
         ], 'Проверка договора');
     }
 
@@ -375,5 +376,58 @@ class TenantController extends BaseController
         $tenantProfile = $this->tenantRepository->findByUserId((int) $contract['tenant_id']);
 
         return [$tenant, $tenantProfile];
+    }
+
+    private function buildContractVariables(array $invitation, array $tenant, array $tenantProfile): array
+    {
+        $now = app_now((string) app_config($this->config, 'app.timezone', 'Europe/Moscow'));
+        $landlord = app_config($this->config, 'landlord.details', []);
+
+        return [
+            'city' => (string) app_config($this->config, 'app.city', 'Москва'),
+            'contract_date_day' => $now->format('d'),
+            'contract_date_month' => $this->monthNameRu((int) $now->format('n')),
+            'contract_date_year' => $now->format('Y'),
+            'tenant_full_name' => (string) ($tenant['full_name'] ?? ''),
+            'tenant_passport_series' => (string) ($tenantProfile['passport_series'] ?? ''),
+            'tenant_passport_number' => (string) ($tenantProfile['passport_number'] ?? ''),
+            'tenant_passport_issued_by' => (string) ($tenantProfile['passport_issued_by'] ?? ''),
+            'tenant_passport_date' => (string) ($tenantProfile['passport_date'] ?? ''),
+            'tenant_registration_address' => (string) ($tenantProfile['registration_address'] ?? ''),
+            'tenant_phone' => (string) ($tenant['phone'] ?? ''),
+            'tenant_email' => (string) ($tenant['email'] ?? ''),
+            'property_address' => (string) ($invitation['property_address'] ?? ''),
+            'rent_amount' => number_format((float) ($invitation['rent_amount'] ?? 0), 2, '.', ' '),
+            'landlord_full_name' => (string) ($landlord['full_name'] ?? ''),
+            'landlord_type' => (string) ($landlord['type'] ?? ''),
+            'landlord_inn' => (string) ($landlord['inn'] ?? ''),
+            'landlord_passport_series' => (string) ($landlord['passport_series'] ?? ''),
+            'landlord_passport_number' => (string) ($landlord['passport_number'] ?? ''),
+            'landlord_passport_issued_by' => (string) ($landlord['passport_issued_by'] ?? ''),
+            'landlord_passport_date' => (string) ($landlord['passport_date'] ?? ''),
+            'landlord_registration_address' => (string) ($landlord['registration_address'] ?? ''),
+            'landlord_phone' => (string) ($landlord['phone'] ?? ''),
+            'landlord_email' => (string) ($landlord['email'] ?? ''),
+        ];
+    }
+
+    private function monthNameRu(int $month): string
+    {
+        $months = [
+            1 => 'января',
+            2 => 'февраля',
+            3 => 'марта',
+            4 => 'апреля',
+            5 => 'мая',
+            6 => 'июня',
+            7 => 'июля',
+            8 => 'августа',
+            9 => 'сентября',
+            10 => 'октября',
+            11 => 'ноября',
+            12 => 'декабря',
+        ];
+
+        return $months[$month] ?? '';
     }
 }

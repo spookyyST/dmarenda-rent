@@ -59,6 +59,7 @@ return [
         'contracts_dir' => __DIR__ . '/storage/files/contracts',
         'receipts_dir' => __DIR__ . '/storage/files/receipts',
         'logs_dir' => __DIR__ . '/storage/logs',
+        'content_dir' => __DIR__ . '/storage/content',
     ],
     'landlord' => [
         'default_full_name' => 'Системный арендодатель',

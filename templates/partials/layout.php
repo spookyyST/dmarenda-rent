@@ -19,6 +19,7 @@ $isAdminArea = str_contains($requestUri, '/admin') && !str_contains($requestUri,
                 <a href="<?= htmlspecialchars(rtrim($base_path, '/') . '/admin/invitations', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>">Приглашения</a>
                 <a href="<?= htmlspecialchars(rtrim($base_path, '/') . '/admin/contracts', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>">Договоры</a>
                 <a href="<?= htmlspecialchars(rtrim($base_path, '/') . '/admin/payments', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>">Платежи</a>
+                <a href="<?= htmlspecialchars(rtrim($base_path, '/') . '/admin/content', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>">Контент</a>
                 <a href="<?= htmlspecialchars(rtrim($base_path, '/') . '/admin/logout', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>">Выход</a>
             </nav>
         <?php endif; ?>

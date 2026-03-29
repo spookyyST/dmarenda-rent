@@ -25,6 +25,7 @@ use Rent\Repository\UserRepository;
 use Rent\Repository\WebhookEventRepository;
 use Rent\Service\FileStorageService;
 use Rent\Service\MailService;
+use Rent\Service\ContentService;
 use Rent\Service\NotificationService;
 use Rent\Service\PaymentWorkflowService;
 use Rent\Service\PdfService;
@@ -55,6 +56,7 @@ class Application
 
     private FileStorageService $fileStorage;
     private MailService $mailService;
+    private ContentService $contentService;
     private NotificationService $notificationService;
     private PdfService $pdfService;
     private YookassaService $yookassaService;
@@ -121,7 +123,8 @@ class Application
             $this->contractRepository,
             $this->paymentRepository,
             $this->tenantRepository,
-            $this->fileStorage
+            $this->fileStorage,
+            $this->contentService
         );
 
         $tenantController = new TenantController(
@@ -137,11 +140,12 @@ class Application
             $this->fileStorage,
             $this->tenantRegistrationService,
             $this->paymentWorkflowService,
-            $this->paymentRepository
+            $this->paymentRepository,
+            $this->contentService
         );
 
         $webhookController = new WebhookController($this->paymentWorkflowService, $this->logger);
-        $legalController = new LegalController($this->config, $this->view);
+        $legalController = new LegalController($this->config, $this->view, $this->contentService);
 
         $router->get('/', fn (): Response => Response::redirect(rtrim((string) app_config($this->config, 'app.base_path', '/rent'), '/') . '/admin/login'));
 
@@ -155,6 +159,8 @@ class Application
 
         $router->get('/admin/contracts', fn (Request $request): Response => $adminController->listContracts($request));
         $router->get('/admin/payments', fn (): Response => $adminController->listPayments());
+        $router->get('/admin/content', fn (): Response => $adminController->showContentEditor());
+        $router->post('/admin/content', fn (Request $request): Response => $adminController->saveContentEditor($request));
         $router->get('/admin/tenant/{id}', fn (Request $request, array $params): Response => $adminController->showTenant($params));
         $router->get('/admin/download/contract/{id}', fn (Request $request, array $params): Response => $adminController->downloadContract($params));
         $router->get('/admin/download/receipt/{paymentId}', fn (Request $request, array $params): Response => $adminController->downloadReceipt($params));
@@ -202,6 +208,7 @@ class Application
     {
         $this->fileStorage = new FileStorageService($this->config);
         $this->mailService = new MailService($this->config, $this->logger, $this->fileStorage);
+        $this->contentService = new ContentService($this->config);
         $this->notificationService = new NotificationService($this->config, $this->mailService, $this->notificationRepository, $this->view);
         $this->pdfService = new PdfService($this->config, $this->view, $this->fileStorage);
         $this->yookassaService = new YookassaService($this->config);
@@ -228,7 +235,8 @@ class Application
             $this->tenantRepository,
             $this->webhookEventRepository,
             $this->pdfService,
-            $this->notificationService
+            $this->notificationService,
+            $this->contentService
         );
 
         $this->reminderService = new ReminderService(
@@ -247,6 +255,7 @@ class Application
             app_config($this->config, 'storage.passports_dir'),
             app_config($this->config, 'storage.contracts_dir'),
             app_config($this->config, 'storage.receipts_dir'),
+            app_config($this->config, 'storage.content_dir'),
         ];
 
         foreach ($dirs as $dir) {

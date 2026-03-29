@@ -15,3 +15,4 @@
 !/storage/files/passports/.gitkeep
 !/storage/files/contracts/.gitkeep
 !/storage/files/receipts/.gitkeep
+/storage/content/*.html

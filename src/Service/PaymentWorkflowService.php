@@ -28,7 +28,8 @@ class PaymentWorkflowService
         private readonly TenantRepository $tenantRepository,
         private readonly WebhookEventRepository $webhookEventRepository,
         private readonly PdfService $pdfService,
-        private readonly NotificationService $notificationService
+        private readonly NotificationService $notificationService,
+        private readonly ContentService $contentService
     ) {
     }
 
@@ -332,10 +333,10 @@ class PaymentWorkflowService
     {
         $timezone = (string) app_config($this->config, 'app.timezone', 'Europe/Moscow');
         $contractDate = app_now($timezone);
-
-        return [
-            'city' => app_config($this->config, 'app.city', 'Москва'),
-            'contract_date' => $contractDate->format('Y-m-d'),
+        $landlord = app_config($this->config, 'landlord.details', []);
+        $rentAmountFormatted = number_format((float) $invitation['rent_amount'], 2, '.', ' ');
+        $variables = [
+            'city' => (string) app_config($this->config, 'app.city', 'Москва'),
             'contract_date_day' => $contractDate->format('d'),
             'contract_date_month' => $this->monthNameRu((int) $contractDate->format('n')),
             'contract_date_year' => $contractDate->format('Y'),
@@ -348,12 +349,41 @@ class PaymentWorkflowService
             'tenant_phone' => (string) $tenant['phone'],
             'tenant_email' => (string) $tenant['email'],
             'property_address' => (string) $invitation['property_address'],
-            'rent_amount' => (float) $invitation['rent_amount'],
-            'landlord' => app_config($this->config, 'landlord.details', []),
+            'rent_amount' => $rentAmountFormatted,
+            'landlord_full_name' => (string) ($landlord['full_name'] ?? ''),
+            'landlord_type' => (string) ($landlord['type'] ?? ''),
+            'landlord_inn' => (string) ($landlord['inn'] ?? ''),
+            'landlord_passport_series' => (string) ($landlord['passport_series'] ?? ''),
+            'landlord_passport_number' => (string) ($landlord['passport_number'] ?? ''),
+            'landlord_passport_issued_by' => (string) ($landlord['passport_issued_by'] ?? ''),
+            'landlord_passport_date' => (string) ($landlord['passport_date'] ?? ''),
+            'landlord_registration_address' => (string) ($landlord['registration_address'] ?? ''),
+            'landlord_phone' => (string) ($landlord['phone'] ?? ''),
+            'landlord_email' => (string) ($landlord['email'] ?? ''),
+        ];
+
+        return [
+            'city' => $variables['city'],
+            'contract_date' => $contractDate->format('Y-m-d'),
+            'contract_date_day' => $variables['contract_date_day'],
+            'contract_date_month' => $variables['contract_date_month'],
+            'contract_date_year' => $variables['contract_date_year'],
+            'tenant_full_name' => $variables['tenant_full_name'],
+            'tenant_passport_series' => $variables['tenant_passport_series'],
+            'tenant_passport_number' => $variables['tenant_passport_number'],
+            'tenant_passport_issued_by' => $variables['tenant_passport_issued_by'],
+            'tenant_passport_date' => $variables['tenant_passport_date'],
+            'tenant_registration_address' => $variables['tenant_registration_address'],
+            'tenant_phone' => $variables['tenant_phone'],
+            'tenant_email' => $variables['tenant_email'],
+            'property_address' => $variables['property_address'],
+            'rent_amount' => $variables['rent_amount'],
+            'landlord' => $landlord,
             'tenant' => $tenant,
             'tenant_profile' => $tenantProfile,
             'invitation' => $invitation,
             'service_name' => app_config($this->config, 'app.name', 'ДМаренда'),
+            'contract_html' => $this->contentService->renderContractHtml($variables),
         ];
     }
 

@@ -76,18 +76,23 @@ label {
     font-weight: 600;
 }
 
-input, button, .button, select {
+input, button, .button, select, textarea {
     font: inherit;
 }
 
-input, select {
+input, select, textarea {
     border: 1px solid var(--border);
     border-radius: 8px;
     padding: 10px 11px;
     background: #fff;
 }
 
-input:focus, select:focus {
+textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+input:focus, select:focus, textarea:focus {
     border-color: #86b4ff;
     outline: 2px solid rgba(31,111,235,0.2);
     outline-offset: 0;

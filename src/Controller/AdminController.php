@@ -13,6 +13,7 @@ use Rent\Repository\InvitationRepository;
 use Rent\Repository\PaymentRepository;
 use Rent\Repository\TenantRepository;
 use Rent\Repository\UserRepository;
+use Rent\Service\ContentService;
 use Rent\Service\FileStorageService;
 use Rent\Support\Auth;
 use Rent\Support\Csrf;
@@ -32,7 +33,8 @@ class AdminController extends BaseController
         private readonly ContractRepository $contractRepository,
         private readonly PaymentRepository $paymentRepository,
         private readonly TenantRepository $tenantRepository,
-        private readonly FileStorageService $fileStorage
+        private readonly FileStorageService $fileStorage,
+        private readonly ContentService $contentService
     ) {
         parent::__construct($config, $view, $session, $csrf);
     }
@@ -160,6 +162,46 @@ class AdminController extends BaseController
         return $this->render('admin/payments.php', [
             'payments' => $payments,
         ], 'Платежи');
+    }
+
+    public function showContentEditor(): Response
+    {
+        if (($guard = $this->guard()) !== null) {
+            return $guard;
+        }
+
+        return $this->render('admin/content.php', [
+            'privacy_content' => $this->contentService->getPrivacyContent(),
+            'contract_template' => $this->contentService->getContractTemplate(),
+        ], 'Контент сайта');
+    }
+
+    public function saveContentEditor(Request $request): Response
+    {
+        if (($guard = $this->guard()) !== null) {
+            return $guard;
+        }
+
+        try {
+            $this->requireCsrf((string) $request->input('_csrf', ''));
+        } catch (RuntimeException) {
+            $this->session?->flash('error', 'Сессия устарела.');
+            return $this->redirect('/admin/content');
+        }
+
+        $privacyContent = trim((string) $request->input('privacy_content', ''));
+        $contractTemplate = trim((string) $request->input('contract_template', ''));
+
+        if ($privacyContent === '' || $contractTemplate === '') {
+            $this->session?->flash('error', 'Оба поля должны быть заполнены.');
+            return $this->redirect('/admin/content');
+        }
+
+        $this->contentService->savePrivacyContent($privacyContent);
+        $this->contentService->saveContractTemplate($contractTemplate);
+
+        $this->session?->flash('success', 'Политика и шаблон договора обновлены.');
+        return $this->redirect('/admin/content');
     }
 
     public function showTenant(array $params): Response
