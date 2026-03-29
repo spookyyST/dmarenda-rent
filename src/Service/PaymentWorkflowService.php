@@ -53,7 +53,7 @@ class PaymentWorkflowService
             $tenant['full_name']
         );
 
-        if ((bool) app_config($this->config, 'yookassa.test_mode', false)) {
+        if ($this->shouldUseFakePayments()) {
             $paymentId = 'fake_' . bin2hex(random_bytes(8));
 
             $this->paymentRepository->create([
@@ -116,7 +116,7 @@ class PaymentWorkflowService
 
     public function processFakeConfirmation(string $token, string $paymentId): void
     {
-        if (!(bool) app_config($this->config, 'yookassa.test_mode', false)) {
+        if (!$this->shouldUseFakePayments()) {
             throw new RuntimeException('Тестовый режим оплаты отключен.');
         }
 
@@ -464,6 +464,31 @@ class PaymentWorkflowService
         ];
 
         return $months[$month] ?? '';
+    }
+
+    private function shouldUseFakePayments(): bool
+    {
+        if ((bool) app_config($this->config, 'yookassa.test_mode', false)) {
+            return true;
+        }
+
+        return !$this->yookassaCredentialsConfigured();
+    }
+
+    private function yookassaCredentialsConfigured(): bool
+    {
+        $shopId = (string) app_config($this->config, 'yookassa.shop_id', '');
+        $secret = (string) app_config($this->config, 'yookassa.secret_key', '');
+
+        if ($shopId === '' || $secret === '') {
+            return false;
+        }
+
+        if ($shopId === 'CHANGE_ME' || $secret === 'CHANGE_ME') {
+            return false;
+        }
+
+        return true;
     }
 
 }
