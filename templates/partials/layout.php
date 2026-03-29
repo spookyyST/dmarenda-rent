@@ -13,7 +13,14 @@ $isAdminArea = str_contains($requestUri, '/admin') && !str_contains($requestUri,
 ?>
 <header class="site-header">
     <div class="wrap">
-        <div class="brand"><?= htmlspecialchars($app['name'] ?? 'ДМаренда', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></div>
+        <div class="brand">
+            <span class="brand-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 11.2 12 4l9 7.2v8.3a1.5 1.5 0 0 1-1.5 1.5h-4.8v-6h-5.4v6H4.5A1.5 1.5 0 0 1 3 19.5v-8.3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+                </svg>
+            </span>
+            <?= htmlspecialchars($app['name'] ?? 'ДМаренда', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>
+        </div>
         <?php if ($isAdminArea): ?>
             <nav class="nav">
                 <a href="<?= htmlspecialchars(rtrim($base_path, '/') . '/admin/invitations', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>">Приглашения</a>
