@@ -5,8 +5,8 @@ $v = fn(string $key) => htmlspecialchars((string) ($o[$key] ?? ''), ENT_QUOTES |
 <section class="card narrow">
     <h1>Регистрация арендатора</h1>
     <div class="invite-meta">
-        <span>📍 <?= htmlspecialchars((string) $invitation['property_address'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></span>
-        <span>💰 <?= htmlspecialchars(number_format((float) $invitation['rent_amount'], 0, '.', ' '), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?> ₽/мес</span>
+        <div class="invite-meta-item">📍 <?= htmlspecialchars((string) $invitation['property_address'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></div>
+        <div class="invite-meta-item">💰 <?= htmlspecialchars(number_format((float) $invitation['rent_amount'], 0, '.', ' '), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?> ₽/мес</div>
     </div>
 
     <?php if ($is_registered): ?>

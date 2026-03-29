@@ -33,21 +33,21 @@
             </thead>
             <tbody>
             <?php if ($invitations === []): ?>
-                <tr>
+                <tr class="table-empty">
                     <td colspan="8">Нет данных</td>
                 </tr>
             <?php endif; ?>
             <?php foreach ($invitations as $invitation): ?>
                 <?php $inviteUrl = rtrim((string) $base_url, '/') . '/i/' . $invitation['token']; ?>
                 <tr>
-                    <td><?= (int) $invitation['id'] ?></td>
-                    <td><?= htmlspecialchars((string) $invitation['email'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></td>
-                    <td><?= htmlspecialchars((string) ($invitation['phone'] ?? '-'), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></td>
-                    <td><?= htmlspecialchars((string) $invitation['property_address'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></td>
-                    <td><?= htmlspecialchars(number_format((float) $invitation['rent_amount'], 2, '.', ' '), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></td>
-                    <td><?= htmlspecialchars((string) $invitation['start_date'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></td>
-                    <td><span class="status status-<?= htmlspecialchars((string) $invitation['status'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"><?= htmlspecialchars((string) $invitation['status'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></span></td>
-                    <td><a href="<?= htmlspecialchars($inviteUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" target="_blank" rel="noopener">Открыть</a></td>
+                    <td data-label="ID"><?= (int) $invitation['id'] ?></td>
+                    <td data-label="Email"><?= htmlspecialchars((string) $invitation['email'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></td>
+                    <td data-label="Телефон"><?= htmlspecialchars((string) ($invitation['phone'] ?? '-'), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></td>
+                    <td data-label="Объект"><?= htmlspecialchars((string) $invitation['property_address'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></td>
+                    <td data-label="Сумма"><?= htmlspecialchars(number_format((float) $invitation['rent_amount'], 2, '.', ' '), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></td>
+                    <td data-label="Дата старта"><?= htmlspecialchars((string) $invitation['start_date'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></td>
+                    <td data-label="Статус"><span class="status status-<?= htmlspecialchars((string) $invitation['status'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"><?= htmlspecialchars((string) $invitation['status'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></span></td>
+                    <td data-label="Ссылка"><a href="<?= htmlspecialchars($inviteUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" target="_blank" rel="noopener">Открыть</a></td>
                 </tr>
             <?php endforeach; ?>
             </tbody>
