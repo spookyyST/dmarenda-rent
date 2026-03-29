@@ -1,0 +1,11 @@
+/vendor/
+/storage/db/*.sqlite
+/storage/logs/*.log
+/public/uploads/passports/*
+/public/uploads/contracts/*
+/public/uploads/receipts/*
+!/public/uploads/passports/.gitkeep
+!/public/uploads/contracts/.gitkeep
+!/public/uploads/receipts/.gitkeep
+
+/config.php
