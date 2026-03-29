@@ -116,7 +116,7 @@ class PaymentWorkflowService
 
     public function processFakeConfirmation(string $token, string $paymentId): void
     {
-        if (!$this->fakePaymentsEnabled()) {
+        if (!(bool) app_config($this->config, 'yookassa.test_mode', false)) {
             throw new RuntimeException('Тестовый режим оплаты отключен.');
         }
 
@@ -182,34 +182,6 @@ class PaymentWorkflowService
         }
     }
 
-    public function createAndConfirmFakePaymentForInvitation(array $invitation): string
-    {
-        if (!$this->fakePaymentsEnabled()) {
-            throw new RuntimeException('Тестовый режим оплаты отключен.');
-        }
-
-        $contract = $this->contractRepository->findByInvitationId((int) $invitation['id']);
-        if ($contract === null) {
-            throw new RuntimeException('Договор не найден для приглашения.');
-        }
-
-        $paymentId = 'fake_' . bin2hex(random_bytes(8));
-        $this->paymentRepository->create([
-            'contract_id' => (int) $contract['id'],
-            'amount' => (float) $invitation['rent_amount'],
-            'status' => 'pending',
-            'payment_id' => $paymentId,
-            'yookassa_status' => 'pending',
-            'receipt_pdf_path' => null,
-            'next_payment_date' => null,
-            'paid_at' => null,
-            'created_at' => app_now((string) app_config($this->config, 'app.timezone'))->format('Y-m-d H:i:s'),
-        ]);
-
-        $this->processFakeConfirmation((string) $invitation['token'], $paymentId);
-
-        return $paymentId;
-    }
 
     public function handleWebhook(array $event, string $requestIp): void
     {
@@ -494,9 +466,4 @@ class PaymentWorkflowService
         return $months[$month] ?? '';
     }
 
-    private function fakePaymentsEnabled(): bool
-    {
-        return (bool) app_config($this->config, 'yookassa.test_mode', false)
-            || (bool) app_config($this->config, 'testing.fake_payment_enabled', false);
-    }
 }

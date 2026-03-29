@@ -12,12 +12,6 @@
 
     <div class="actions-row">
         <a class="button" href="<?= htmlspecialchars(rtrim($base_path, '/') . '/i/' . $invitation['token'] . '/pay', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>">Оплатить</a>
-        <?php if (!empty($fake_payment_enabled)): ?>
-            <form method="post" action="<?= htmlspecialchars(rtrim($base_path, '/') . '/i/' . $invitation['token'] . '/pay/fake', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" style="display:inline-flex;">
-                <input type="hidden" name="_csrf" value="<?= htmlspecialchars((string) $csrf_token, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>">
-                <button type="submit" class="button secondary">Тестовая оплата</button>
-            </form>
-        <?php endif; ?>
         <?php if (!empty($contract['pdf_path'])): ?>
             <a class="button secondary" href="<?= htmlspecialchars(rtrim($base_path, '/') . '/i/' . $invitation['token'] . '/download/contract', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>">Скачать договор PDF</a>
         <?php endif; ?>
