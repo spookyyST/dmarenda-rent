@@ -169,6 +169,7 @@ class TenantController extends BaseController
             'contract' => $contract,
             'contract_html' => $contractHtml,
             'privacy_url' => $this->assetUrl((string) app_config($this->config, 'app.privacy_path', '/privacy')),
+            'fake_payment_enabled' => $this->fakePaymentEnabled(),
         ], 'Проверка договора');
     }
 
@@ -262,6 +263,35 @@ class TenantController extends BaseController
         return $this->redirect('/i/' . $invitation['token'] . '/pay/return');
     }
 
+    public function fakePay(Request $request, array $params): Response
+    {
+        $invitation = $this->invitationByParams($params);
+        if ($invitation === null) {
+            return Response::html('<h1>Invalid invitation</h1>', 404);
+        }
+
+        if (!$this->fakePaymentEnabled()) {
+            $this->session?->flash('error', 'Тестовая оплата отключена.');
+            return $this->redirect('/i/' . $invitation['token'] . '/cabinet');
+        }
+
+        try {
+            $this->requireCsrf((string) $request->input('_csrf', ''));
+        } catch (\RuntimeException) {
+            $this->session?->flash('error', 'Сессия устарела. Обновите страницу.');
+            return $this->redirect('/i/' . $invitation['token'] . '/cabinet');
+        }
+
+        try {
+            $paymentId = $this->paymentWorkflowService->createAndConfirmFakePaymentForInvitation($invitation);
+            $this->session?->flash('success', 'Тестовая оплата выполнена: ' . $paymentId);
+        } catch (\Throwable $e) {
+            $this->session?->flash('error', 'Тестовая оплата не удалась: ' . $e->getMessage());
+        }
+
+        return $this->redirect('/i/' . $invitation['token'] . '/cabinet');
+    }
+
     public function showCabinet(array $params): Response
     {
         $invitation = $this->invitationByParams($params);
@@ -290,6 +320,7 @@ class TenantController extends BaseController
             'tenant_profile' => $tenantProfile,
             'latest_payment' => $latestPayment,
             'payment_history' => $paymentHistory,
+            'fake_payment_enabled' => $this->fakePaymentEnabled(),
         ], 'Личный кабинет арендатора');
     }
 
@@ -429,5 +460,11 @@ class TenantController extends BaseController
         ];
 
         return $months[$month] ?? '';
+    }
+
+    private function fakePaymentEnabled(): bool
+    {
+        return (bool) app_config($this->config, 'yookassa.test_mode', false)
+            || (bool) app_config($this->config, 'testing.fake_payment_enabled', false);
     }
 }

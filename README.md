@@ -40,6 +40,7 @@ php -S localhost:8080 -t public public/router.php
 - `app.base_path` = `/rent`
 - `smtp.*` (отправитель `ids@drmhhh.com`)
 - `yookassa.shop_id`, `yookassa.secret_key`, `yookassa.webhook_url`
+- `testing.fake_payment_enabled=true` (только для локального теста кнопкой, на проде `false`)
 - `admin.login`, `admin.password_hash`
 
 3. Права на каталоги:
@@ -152,6 +153,7 @@ Cron проверяет `next_payment_date` и отправляет 1 письм
 - `GET /rent/i/{token}/cabinet`
 - `GET/POST /rent/i/{token}/pay`
 - `GET /rent/i/{token}/pay/fake-confirm/{paymentId}` (только при `yookassa.test_mode=true`)
+- `POST /rent/i/{token}/pay/fake` (кнопка тестовой оплаты, только при `testing.fake_payment_enabled=true` или `yookassa.test_mode=true`)
 - `GET /rent/i/{token}/pay/return`
 - `GET /rent/i/{token}/download/contract`
 - `GET /rent/i/{token}/download/receipt/{paymentId}`

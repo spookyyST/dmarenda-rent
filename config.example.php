@@ -35,6 +35,9 @@ return [
         'currency' => getenv('YOOKASSA_CURRENCY') ?: 'RUB',
         'test_mode' => filter_var(getenv('YOOKASSA_TEST_MODE') ?: 'false', FILTER_VALIDATE_BOOLEAN),
     ],
+    'testing' => [
+        'fake_payment_enabled' => filter_var(getenv('FAKE_PAYMENT_ENABLED') ?: 'false', FILTER_VALIDATE_BOOLEAN),
+    ],
     'security' => [
         'max_upload_mb' => 10,
         'allowed_extensions' => ['jpg', 'jpeg', 'png', 'pdf'],

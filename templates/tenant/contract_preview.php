@@ -14,6 +14,9 @@
 
         <div class="actions-row">
             <button type="submit">Перейти к оплате</button>
+            <?php if (!empty($fake_payment_enabled)): ?>
+                <a class="button secondary" href="<?= htmlspecialchars(rtrim($base_path, '/') . '/i/' . $invitation['token'] . '/cabinet', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>">Тестовая оплата из кабинета</a>
+            <?php endif; ?>
             <?php if (!empty($contract['pdf_path'])): ?>
                 <a class="button secondary" href="<?= htmlspecialchars(rtrim($base_path, '/') . '/i/' . $invitation['token'] . '/download/contract', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>">Скачать договор PDF</a>
             <?php endif; ?>
