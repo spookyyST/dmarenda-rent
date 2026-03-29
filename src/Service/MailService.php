@@ -25,6 +25,8 @@ class MailService
             $mail->SMTPAuth = true;
             $mail->Username = (string) app_config($this->config, 'smtp.user');
             $mail->Password = (string) app_config($this->config, 'smtp.pass');
+            $mail->Timeout = 12;
+            $mail->SMTPKeepAlive = false;
             $mail->CharSet = 'UTF-8';
             $mail->Encoding = PHPMailer::ENCODING_BASE64;
 
