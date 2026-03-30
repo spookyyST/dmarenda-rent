@@ -172,7 +172,6 @@ class Application
         $router->get('/i/{token}/cabinet', fn (Request $request, array $params): Response => $tenantController->showCabinet($params));
         $router->get('/i/{token}/pay', fn (Request $request, array $params): Response => $tenantController->pay($request, $params));
         $router->post('/i/{token}/pay', fn (Request $request, array $params): Response => $tenantController->pay($request, $params));
-        $router->get('/i/{token}/pay/fake-confirm/{paymentId}', fn (Request $request, array $params): Response => $tenantController->fakePayConfirm($params));
         $router->get('/i/{token}/pay/return', fn (Request $request, array $params): Response => $tenantController->paymentReturn($params));
         $router->get('/i/{token}/download/contract', fn (Request $request, array $params): Response => $tenantController->downloadContract($params));
         $router->get('/i/{token}/download/receipt/{paymentId}', fn (Request $request, array $params): Response => $tenantController->downloadReceipt($params));

@@ -33,7 +33,6 @@ return [
         'secret_key' => getenv('YOOKASSA_SECRET_KEY') ?: 'CHANGE_ME',
         'webhook_url' => getenv('YOOKASSA_WEBHOOK_URL') ?: 'https://example.com/webhooks/yookassa',
         'currency' => getenv('YOOKASSA_CURRENCY') ?: 'RUB',
-        'test_mode' => filter_var(getenv('YOOKASSA_TEST_MODE') ?: 'false', FILTER_VALIDATE_BOOLEAN),
     ],
     'security' => [
         'max_upload_mb' => 10,

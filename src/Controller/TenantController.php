@@ -238,30 +238,6 @@ class TenantController extends BaseController
         ], 'Статус оплаты');
     }
 
-    public function fakePayConfirm(array $params): Response
-    {
-        $invitation = $this->invitationByParams($params);
-        if ($invitation === null) {
-            return Response::html('<h1>Invalid invitation</h1>', 404);
-        }
-
-        $paymentId = (string) ($params['paymentId'] ?? '');
-        if ($paymentId === '') {
-            $this->session?->flash('error', 'Не найден тестовый платеж.');
-            return $this->redirect('/i/' . $invitation['token'] . '/contract');
-        }
-
-        try {
-            $this->paymentWorkflowService->processFakeConfirmation((string) $invitation['token'], $paymentId);
-            $this->session?->flash('success', 'Тестовая оплата успешно выполнена.');
-        } catch (\Throwable $e) {
-            $this->session?->flash('error', 'Тестовая оплата не удалась: ' . $e->getMessage());
-            return $this->redirect('/i/' . $invitation['token'] . '/contract');
-        }
-
-        return $this->redirect('/i/' . $invitation['token'] . '/pay/return');
-    }
-
     public function showCabinet(array $params): Response
     {
         $invitation = $this->invitationByParams($params);

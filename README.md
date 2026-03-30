@@ -151,7 +151,6 @@ Cron проверяет `next_payment_date` и отправляет 1 письм
 - `GET /rent/i/{token}/contract`
 - `GET /rent/i/{token}/cabinet`
 - `GET/POST /rent/i/{token}/pay`
-- `GET /rent/i/{token}/pay/fake-confirm/{paymentId}` (только при `yookassa.test_mode=true`)
 - `GET /rent/i/{token}/pay/return`
 - `GET /rent/i/{token}/download/contract`
 - `GET /rent/i/{token}/download/receipt/{paymentId}`

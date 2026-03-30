@@ -53,27 +53,6 @@ class PaymentWorkflowService
             $tenant['full_name']
         );
 
-        if ($this->shouldUseFakePayments()) {
-            $paymentId = 'fake_' . bin2hex(random_bytes(8));
-
-            $this->paymentRepository->create([
-                'contract_id' => (int) $contract['id'],
-                'amount' => (float) $invitation['rent_amount'],
-                'status' => 'pending',
-                'payment_id' => $paymentId,
-                'yookassa_status' => 'pending',
-                'receipt_pdf_path' => null,
-                'next_payment_date' => null,
-                'paid_at' => null,
-                'created_at' => app_now((string) app_config($this->config, 'app.timezone'))->format('Y-m-d H:i:s'),
-            ]);
-
-            return [
-                'payment_id' => $paymentId,
-                'confirmation_url' => rtrim((string) app_config($this->config, 'app.base_url'), '/') . '/i/' . $invitation['token'] . '/pay/fake-confirm/' . $paymentId,
-            ];
-        }
-
         $payment = $this->yookassa->createPayment(
             (float) $invitation['rent_amount'],
             $description,
@@ -112,74 +91,6 @@ class PaymentWorkflowService
             'payment_id' => $paymentId,
             'confirmation_url' => $confirmationUrl,
         ];
-    }
-
-    public function processFakeConfirmation(string $token, string $paymentId): void
-    {
-        if (!$this->shouldUseFakePayments()) {
-            throw new RuntimeException('Тестовый режим оплаты отключен.');
-        }
-
-        $invitation = $this->invitationRepository->findByToken($token);
-        if ($invitation === null) {
-            throw new RuntimeException('Приглашение не найдено.');
-        }
-
-        $contract = $this->contractRepository->findByInvitationId((int) $invitation['id']);
-        if ($contract === null) {
-            throw new RuntimeException('Договор не найден.');
-        }
-
-        $existingPayment = $this->paymentRepository->findByPaymentId($paymentId);
-        if ($existingPayment === null || (int) $existingPayment['contract_id'] !== (int) $contract['id']) {
-            throw new RuntimeException('Платеж не найден.');
-        }
-
-        if ((string) $existingPayment['status'] === 'succeeded') {
-            return;
-        }
-
-        $this->pdo->beginTransaction();
-
-        try {
-            $tenant = $this->userRepository->findById((int) $contract['tenant_id']);
-            $tenantProfile = $this->tenantRepository->findByUserId((int) $contract['tenant_id']);
-
-            if ($tenant === null || $tenantProfile === null) {
-                throw new RuntimeException('Данные арендатора не найдены.');
-            }
-
-            $contractPdfPath = (string) ($contract['pdf_path'] ?? '');
-            if ($contractPdfPath === '') {
-                $contractPdfPath = $this->pdfService->generateContractPdf($this->buildContractPdfPayload($invitation, $tenant, $tenantProfile));
-                $this->contractRepository->updatePdfPath((int) $contract['id'], $contractPdfPath);
-            }
-
-            $paidAt = app_now((string) app_config($this->config, 'app.timezone'))->format('Y-m-d H:i:s');
-            $receiptPdfPath = $this->pdfService->generateReceiptPdf([
-                'tenant' => $tenant,
-                'invitation' => $invitation,
-                'payment_id' => $existingPayment['payment_id'],
-                'amount' => $existingPayment['amount'],
-                'paid_at' => $paidAt,
-                'city' => app_config($this->config, 'app.city', 'Москва'),
-                'service_name' => app_config($this->config, 'app.name', 'ДМаренда'),
-            ]);
-
-            $nextPaymentDate = $this->calculateNextPaymentDate((int) $contract['id'], (string) $invitation['start_date']);
-            $this->paymentRepository->updateSucceeded((int) $existingPayment['id'], $receiptPdfPath, $nextPaymentDate, $paidAt);
-            $this->invitationRepository->updateStatus((int) $invitation['id'], 'paid');
-
-            $this->pdo->commit();
-
-            $freshPayment = $this->paymentRepository->findByPaymentId($paymentId);
-            if ($freshPayment !== null) {
-                $this->notificationService->sendPaymentSuccessEmail($tenant, $invitation, $freshPayment, $contractPdfPath, $receiptPdfPath);
-            }
-        } catch (\Throwable $e) {
-            $this->pdo->rollBack();
-            throw $e;
-        }
     }
 
 
@@ -464,31 +375,6 @@ class PaymentWorkflowService
         ];
 
         return $months[$month] ?? '';
-    }
-
-    private function shouldUseFakePayments(): bool
-    {
-        if ((bool) app_config($this->config, 'yookassa.test_mode', false)) {
-            return true;
-        }
-
-        return !$this->yookassaCredentialsConfigured();
-    }
-
-    private function yookassaCredentialsConfigured(): bool
-    {
-        $shopId = (string) app_config($this->config, 'yookassa.shop_id', '');
-        $secret = (string) app_config($this->config, 'yookassa.secret_key', '');
-
-        if ($shopId === '' || $secret === '') {
-            return false;
-        }
-
-        if ($shopId === 'CHANGE_ME' || $secret === 'CHANGE_ME') {
-            return false;
-        }
-
-        return true;
     }
 
 }
